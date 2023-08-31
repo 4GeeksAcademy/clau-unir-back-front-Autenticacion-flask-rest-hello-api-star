@@ -9,6 +9,9 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User, Planetas, Personajes, Vehiculos, Starships, Favoritos
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
+
+
 #from models import Person
 
 app = Flask(__name__)
@@ -24,6 +27,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
+app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+jwt = JWTManager(app)
+
 setup_admin(app)
 
 # Handle/serialize errors like a JSON object
@@ -544,6 +550,84 @@ def eliminar_planeta_favorito(planetas_id):
     }
     
     return jsonify(request_body), 200
+
+
+
+# Autenticacion con JWT
+
+# Endpoint o ruta de registro de usuario
+
+# sing up
+
+@app.route('/signup', methods=['POST'])
+def crear_registro():
+
+    request_body = request.get_json(force=True)
+
+    usuario = User(email=request_body["email"], password=request_body["password"])
+
+    db.session.add(usuario)
+    db.session.commit()
+
+    return {
+        "msg": usuario.serialize()
+    }
+
+
+# login
+
+@app.route('/login', methods=['POST'])
+def login():
+    email= request.json.get("email", None)
+    password= request.json.get("password", None)
+    user_query = User.query.filter_by(email=email).first()
+
+    if user_query is None:
+        return jsonify({"msg": "Email no existe"}), 404
+    
+    if email != user_query.email or password != user_query.password:
+        return jsonify({"msg": "Mail o password incorrectos"}), 401
+
+    access_token = create_access_token(identity=email)
+    response_body = {
+        "access_token": access_token,
+        "email": user_query.serialize()
+    }
+    return jsonify(access_token=access_token)
+
+# Ruta protegida de favoritos
+
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    # Accede a la identidad del usuario con get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+# codigo de Cristian
+# @app.route("/protected", methods=["GET"])
+# @jwt_required()
+# def protected():
+#     # Accede a la identidad del usuario con get_jwt_identity
+#     current_user_id = get_jwt_identity()
+#     user= User.query.filter_by(email=current_user_id),first()
+    
+#     return jsonify({"id": user.id, "username": user.username}), 200
+
+
+
+
+    
+
+
+
+
+    
+
+
+
+
+
 
 
 
