@@ -290,7 +290,7 @@ def consulto_un_starship(starship_id):
 
 # Obtener todos los Favoritos
 
-@app.route('/favoritos', methods=['GET'])
+@app.route('/favoritos1', methods=['GET'])
 def obtener_favoritos():
 
 # Hago una consulta a la tabla favoritos para que traiga todos los favoritos
@@ -316,7 +316,7 @@ def obtener_favoritos():
 
     # Obtener  un favorito para un usuario
 
-@app.route('/users/<int:id>/favoritos', methods=['GET'])
+@app.route('/users/<int:id>/favoritos2', methods=['GET'])
 def consulto_un_favorito(id):
 
     # Hago una consulta a la tabla favorito para que traiga un favorito
@@ -565,6 +565,9 @@ def crear_registro():
     request_body = request.get_json(force=True)
 
     usuario = User(email=request_body["email"], password=request_body["password"])
+    users = User.query.filter_by(email=request_body["email"]).first()
+    if users:  
+        return jsonify({"msg":"ya existe"}), 404
 
     db.session.add(usuario)
     db.session.commit()
@@ -597,22 +600,20 @@ def login():
 
 # Ruta protegida de favoritos
 
-@app.route("/protected", methods=["GET"])
+@app.route("/usuario/favorito", methods=["GET"])
 @jwt_required()
 def protected():
     # Accede a la identidad del usuario con get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    current_user_email = get_jwt_identity()
 
-# codigo de Cristian
-# @app.route("/protected", methods=["GET"])
-# @jwt_required()
-# def protected():
-#     # Accede a la identidad del usuario con get_jwt_identity
-#     current_user_id = get_jwt_identity()
-#     user= User.query.filter_by(email=current_user_id),first()
-    
-#     return jsonify({"id": user.id, "username": user.username}), 200
+    user= User.query.filter_by(email=current_user_email).first()
+    favoritos=Favoritos.query.filter_by(user_id = user.id).all()
+    response = list(map(lambda favoritos: favoritos.serialize(), favoritos))
+    if response == []:
+        return jsonify({"msg": "El usuario no tiene favoritos ingresados"})
+
+
+    return jsonify({"results": response}), 200
 
 
 
@@ -623,13 +624,6 @@ def protected():
 
 
     
-
-
-
-
-
-
-
 
    
 
