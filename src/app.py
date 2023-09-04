@@ -598,6 +598,17 @@ def login():
     }
     return jsonify(access_token=access_token)
 
+# validar ruta del token es como una ruta protegida
+
+@app.route("/valid_token", methods=["GET"])
+@jwt_required()
+def validartoken():
+    # Accede a la identidad del usuario con get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify({"estas_logueado": True}),200
+
+
+
 # Ruta protegida de favoritos
 
 @app.route("/usuario/favorito", methods=["GET"])
@@ -614,6 +625,8 @@ def protected():
 
 
     return jsonify({"results": response}), 200
+
+    
 
 
 
