@@ -154,13 +154,20 @@ class Favoritos(db.Model):
         return '<Favoritos %r>' % self.id
 
     def serialize(self):
+        planetaInfo = Planetas.query.filter_by(id=self.planetas_id).first()
+        personajeInfo = Personajes.query.filter_by(id=self.personajes_id).first()
+        vehiculoInfo = Vehiculos.query.filter_by(id=self.vehiculos_id).first()
+        starshipsInfo = Starships.query.filter_by(id=self.starships_id).first()
+
+
+
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "personajes_id": self.personajes_id,
-            "planetas_id": self.planetas_id,
-            "vehiculos_id": self.vehiculos_id,
-            "starships_id": self.starships_id
+            "planeta": None if planetaInfo is None else planetaInfo.serialize(),
+            "personaje": None if personajeInfo is None else personajeInfo.serialize(),
+            "vehiculo": None if vehiculoInfo is None else vehiculoInfo.serialize(),
+            "starship": None if starshipsInfo is None else starshipsInfo.serialize()
 
             # do not serialize the password, its a security breach
         }
